@@ -1,5 +1,6 @@
 # Все каталоги __pycache__
 __pycache__/
+pension_management.db
 
 # Другие файлы и каталоги
 *.pyc
