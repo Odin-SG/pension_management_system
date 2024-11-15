@@ -5,30 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <body>
     <header>
         Управление Пенсионными Накоплениями
     </header>
-    <main>
+   <main>
         <h1>Личный Кабинет</h1>
         <p>Добро пожаловать, {{ username }}!</p>
         <section class="container">
             <h2>Текущие пенсионные накопления</h2>
             <p>Общая сумма накоплений: <strong>{{ total_amount }}</strong> руб.</p>
             <h3>Детали вкладов:</h3>
-            <ul>
-                {% for detail in details %}
-                    <li>Сумма: {{ detail.amount }} руб., Дата взноса: {{ detail.contribution_date }}</li>
-                {% endfor %}
-            </ul>
+            <table class="contribution-table">
+                <thead>
+                    <tr>
+                        <th>Сумма (руб.)</th>
+                        <th>Дата взноса</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detail in details %}
+                        <tr class="{{ loop.cycle('odd', 'even') }}">
+                            <td>{{ detail.amount }}</td>
+                            <td>{{ detail.contribution_date }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             <h2>Прогнозируемая доходность</h2>
             <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return }}</strong> руб.</p>
         </section>
+        <button id="contribute-button" class="button">Пополнить Накопления</button>
+        <button id="withdraw-button" class="button">Снять Средства</button>
         <a href="/logout" class="button">Выйти</a>
     </main>
+
+    <!-- Модальное окно пополнения -->
+    <div id="contribute-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Пополнение пенсионных накоплений</h2>
+            <form action="/contribute" method="post">
+                <label for="amount">Введите сумму вклада (в рублях):</label>
+                <input type="number" id="amount" name="amount" min="1" step="0.01" required>
+                <button type="submit" class="button">Внести Вклад</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно снятия средств -->
+    <div id="withdraw-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button withdraw-close-button">&times;</span>
+            <h2>Снятие пенсионных накоплений</h2>
+            <form action="/withdraw" method="post">
+                <label for="withdraw-amount">Введите сумму для снятия (в рублях):</label>
+                <input type="number" id="withdraw-amount" name="amount" min="1" step="0.01" required>
+                <button type="submit" class="button">Снять Средства</button>
+            </form>
+        </div>
+    </div>
+
     <footer>
         &copy; 2024 Управление Пенсионными Накоплениями
     </footer>
+
+    <script>
+        // Открытие и закрытие модальных окон
+        $(document).ready(function() {
+            var contributeModal = $('#contribute-modal');
+            var withdrawModal = $('#withdraw-modal');
+            var contributeButton = $('#contribute-button');
+            var withdrawButton = $('#withdraw-button');
+            var closeButton = $('.close-button');
+            var withdrawCloseButton = $('.withdraw-close-button');
+
+            contributeButton.on('click', function() {
+                contributeModal.show();
+            });
+
+            withdrawButton.on('click', function() {
+                withdrawModal.show();
+            });
+
+            closeButton.on('click', function() {
+                contributeModal.hide();
+            });
+
+            withdrawCloseButton.on('click', function() {
+                withdrawModal.hide();
+            });
+
+            $(window).on('click', function(event) {
+                if ($(event.target).is(contributeModal)) {
+                    contributeModal.hide();
+                }
+                if ($(event.target).is(withdrawModal)) {
+                    withdrawModal.hide();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
