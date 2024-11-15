@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from .models import db, User, PensionFund
 from .controllers.pension_calculator import calculate_pension
 from .controllers.user_management import register_user, authenticate_user
@@ -36,6 +36,7 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         if authenticate_user(username, password):
+            session['username'] = username
             flash('Успешный вход!', 'success')
             return redirect(url_for('dashboard'))
         else:
@@ -46,9 +47,31 @@ def login():
 # Личный кабинет пользователя
 @app.route('/dashboard')
 def dashboard():
-    # Здесь будет отображаться информация о пенсионных накоплениях пользователя
-    user_pension_data = calculate_pension()  # Временная функция для демонстрации данных
-    return render_template('dashboard.html', title='Личный Кабинет', data=user_pension_data)
+    # Предположим, что данные пользователя находятся в сессии (например, после авторизации)
+    username = session.get('username', 'Гость')
+
+    # Пример данных для подстановки
+    total_amount = 100000  # например, общая сумма накоплений пользователя
+    details = [
+        {'amount': 20000, 'contribution_date': '2023-01-15'},
+        {'amount': 30000, 'contribution_date': '2023-06-10'},
+        {'amount': 50000, 'contribution_date': '2024-01-01'}
+    ]
+    years = 10
+    interest_rate = 5.0
+    projected_return = 200000  # предполагаемая доходность
+
+    # Рендерим шаблон и передаем данные
+    return render_template(
+        'dashboard.html',
+        title='Личный Кабинет',
+        username=username,
+        total_amount=total_amount,
+        details=details,
+        years=years,
+        interest_rate=interest_rate,
+        projected_return=projected_return
+    )
 
 
 # API для получения информации о накоплениях
