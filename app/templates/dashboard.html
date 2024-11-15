@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+</head>
+<body>
+    <header>
+        Управление Пенсионными Накоплениями
+    </header>
+    <main>
+        <h1>Личный Кабинет</h1>
+        <p>Добро пожаловать, {{ username }}!</p>
+        <section class="container">
+            <h2>Текущие пенсионные накопления</h2>
+            <p>Общая сумма накоплений: <strong>{{ total_amount }}</strong> руб.</p>
+            <h3>Детали вкладов:</h3>
+            <ul>
+                {% for detail in details %}
+                    <li>Сумма: {{ detail.amount }} руб., Дата взноса: {{ detail.contribution_date }}</li>
+                {% endfor %}
+            </ul>
+            <h2>Прогнозируемая доходность</h2>
+            <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return }}</strong> руб.</p>
+        </section>
+        <a href="/logout" class="button">Выйти</a>
+    </main>
+    <footer>
+        &copy; 2024 Управление Пенсионными Накоплениями
+    </footer>
+</body>
+</html>

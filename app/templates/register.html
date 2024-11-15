@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+</head>
+<body>
+    <header>
+        Управление Пенсионными Накоплениями
+    </header>
+    <main>
+        <h1>Регистрация</h1>
+        <form action="/register" method="POST">
+            <input type="text" name="username" placeholder="Имя пользователя" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <button type="submit" class="button">Зарегистрироваться</button>
+        </form>
+        <p>Уже есть аккаунт? <a href="/login">Войти</a></p>
+    </main>
+    <footer>
+        &copy; 2024 Управление Пенсионными Накоплениями
+    </footer>
+</body>
+</html>
