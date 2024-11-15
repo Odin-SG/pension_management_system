@@ -10,6 +10,26 @@ app = create_app()
 with app.app_context():
     db.create_all()
 
+    # На самом деле есть вариант проще, но в индивидуальном задании было условие об
+    # обязательном использовании SQL-ной БД. Это демонстрация, что база поддерживает SQL
+    result = db.engine.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='users';"
+    ).fetchone()
+
+    if result:
+        admin_exists = db.engine.execute(
+            "SELECT 1 FROM users WHERE role = 'admin' LIMIT 1;"
+        ).fetchone()
+
+        if not admin_exists:
+            admin_user = User(username='admin', role='admin')
+            admin_user.set_password('admin123')
+            db.session.add(admin_user)
+            db.session.commit()
+            print("Пользователь-администратор создан с логином 'admin' и паролем 'admin123'.")
+    else:
+        print("Таблица 'users' не существует.")
+
 __all__ = [
     'Config',
     'db',
