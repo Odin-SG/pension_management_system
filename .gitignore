@@ -1,0 +1,11 @@
+# Все каталоги __pycache__
+__pycache__/
+
+# Другие файлы и каталоги
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache/
+*.vscode/
+*.idea/
+*.DS_Store
