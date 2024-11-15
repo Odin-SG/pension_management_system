@@ -45,6 +45,16 @@ def login():
     return render_template('login.html', title='Вход')
 
 
+@app.route('/logout')
+def logout():
+    """
+    Выход пользователя из системы, очистка сессии.
+    """
+    session.pop('username', None)
+    flash('Вы успешно вышли из системы.', 'success')
+    return redirect(url_for('login'))
+
+
 # Личный кабинет пользователя
 @app.route('/dashboard')
 def dashboard():
