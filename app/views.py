@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from .models import db, User, PensionFund
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
 from .controllers.user_management import register_user, authenticate_user, admin_required
@@ -170,50 +170,44 @@ def withdraw():
 @admin_required
 def admin_panel():
     """
-    Панель администратора для отображения всех пользователей и их данных.
+    Панель администратора для управления пользователями и их данными.
     """
-    # Получение всех пользователей и их пенсионных накоплений
-    users = User.query.all()
-    user_data = []
-    for user in users:
-        total_amount = sum(fund.amount for fund in user.pension_funds)
-        user_data.append({
-            'id': user.id,
-            'username': user.username,
-            'total_amount': total_amount
-        })
 
-    # Редактирование данных пользователя
     if request.method == 'POST':
-        user_id = request.form.get('user_id')
-        new_username = request.form.get('new_username')
-        new_role = request.form.get('new_role')
-        new_amount = float(request.form.get('new_amount', 0))
+        # Асинхронное редактирование данных пользователя
+        data = request.get_json()  # Получаем JSON-данные от клиента
+        user_id = data.get('user_id')
+        new_username = data.get('new_username')
+        new_role = data.get('new_role')
+        new_amount = float(data.get('new_amount', 0))
 
         user_to_edit = User.query.get(user_id)
         if user_to_edit:
+            # Обновляем данные пользователя
             if new_username:
                 user_to_edit.username = new_username
             if new_role in ['admin', 'user']:
                 user_to_edit.role = new_role
-
-            # Обновление накоплений пользователя (новый вклад)
             if new_amount != 0:
-                new_contribution = PensionFund(user_id=user_to_edit.id, amount=new_amount, contribution_date=datetime.utcnow())
+                new_contribution = PensionFund(
+                    user_id=user_to_edit.id,
+                    amount=new_amount,
+                    contribution_date=datetime.utcnow()
+                )
                 db.session.add(new_contribution)
 
             try:
                 db.session.commit()
-                flash('Данные пользователя успешно обновлены.', 'success')
+                return jsonify(success=True), 200
             except Exception as e:
                 db.session.rollback()
-                flash('Ошибка при обновлении данных пользователя. Пожалуйста, попробуйте снова.', 'danger')
+                return jsonify(success=False, error=str(e)), 500
+        return jsonify(success=False, error="Пользователь не найден"), 404
 
-    # Запрос информации по конкретному пользователю
+    # Обработка GET-запросов
     user_id = request.args.get('user_id')
-    specific_user = None
-    user_history = None
     if user_id:
+        # Получение информации о конкретном пользователе
         specific_user = User.query.get(user_id)
         if specific_user:
             total_amount = sum(fund.amount for fund in specific_user.pension_funds)
@@ -223,18 +217,26 @@ def admin_panel():
                     'contribution_date': fund.contribution_date.strftime('%Y-%m-%d')
                 } for fund in specific_user.pension_funds
             ]
-            specific_user = {
+            return jsonify(specific_user={
                 'id': specific_user.id,
                 'username': specific_user.username,
                 'total_amount': total_amount,
                 'role': specific_user.role
-            }
+            }, user_history=user_history)
 
+    # Получение всех пользователей и их пенсионных накоплений для отображения в таблице
+    users = User.query.all()
+    user_data = [
+        {
+            'id': user.id,
+            'username': user.username,
+            'total_amount': sum(fund.amount for fund in user.pension_funds)
+        } for user in users
+    ]
     return render_template('admin_panel.html',
                            title='Панель Администратора',
-                           users=user_data,
-                           specific_user=specific_user,
-                           user_history=user_history)
+                           users=user_data)
+
 
 
 # API для получения информации о накоплениях
