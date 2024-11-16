@@ -142,31 +142,50 @@ footer {
 }
 
 /* Стили для таблицы */
-    .contribution-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-    }
+.contribution-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
 
-    .contribution-table th, .contribution-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
+.contribution-table th, .contribution-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
 
-    .contribution-table th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
+.contribution-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
 
-    .contribution-table tr.odd {
-        background-color: #f9f9f9;
-    }
+.contribution-table tr.odd {
+    background-color: #f9f9f9;
+}
 
-    .contribution-table tr.even {
-        background-color: #ffffff;
-    }
+.contribution-table tr.even {
+    background-color: #ffffff;
+}
 
-    .contribution-table tr:hover {
-        background-color: #ddd;
-    }
+.contribution-table tr:hover {
+    background-color: #ddd;
+}
+
+#reports-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#reports-list li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+#reports-list a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+#reports-list a:hover {
+    text-decoration: underline;
+}

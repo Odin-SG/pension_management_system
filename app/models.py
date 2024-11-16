@@ -50,3 +50,15 @@ class InterestRate(db.Model):
 
     def __repr__(self):
         return f'<InterestRate User ID {self.user_id} Rate {self.rate}>'
+
+
+class Report(db.Model):
+    __tablename__ = 'reports'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Report {self.filename}>'
