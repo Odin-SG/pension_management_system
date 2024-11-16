@@ -133,4 +133,25 @@ $(document).ready(function() {
             console.error('Ошибка:', error);
         });
     });
+
+    // Функция для получения текущей процентной ставки по конкретному пользователю
+    $('#user-id').on('input', function() {
+        var userId = $(this).val();
+        $.get("/set_interest_rate", { user_id: userId }, function(data) {
+            if (data.current_rate !== undefined) {
+                $('#current-rate').text(data.current_rate);
+            } else {
+                $('#current-rate').text('Нет данных');
+            }
+        });
+    });
+
+    // Отправка формы с подтверждением
+    $('#set-interest-rate-form').on('submit', function(event) {
+        event.preventDefault();
+        var confirmAction = confirm("Вы уверены, что хотите изменить процентную ставку?");
+        if (confirmAction) {
+            this.submit();
+        }
+    });
 });

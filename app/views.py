@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from .models import db, User, PensionFund
+from .models import db, User, PensionFund, InterestRate
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
 from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required
 from datetime import datetime
@@ -186,7 +186,7 @@ def admin_panel():
             # Обновляем данные пользователя
             if new_username:
                 user_to_edit.username = new_username
-            if new_role in ['admin', 'user']:
+            if new_role in ['admin', 'user', 'manager']:
                 user_to_edit.role = new_role
             if new_amount != 0:
                 new_contribution = PensionFund(
@@ -238,9 +238,9 @@ def admin_panel():
                            users=user_data)
 
 
-@app.route('/set_interest_rate', methods=['GET', 'POST'])
+@app.route('/manager_panel', methods=['GET', 'POST'])
 @manager_required
-def set_interest_rate():
+def manager_panel():
     """
     Регулирование годовой процентной ставки по вкладу для конкретного пользователя. Доступно только менеджерам.
     """
@@ -264,7 +264,7 @@ def set_interest_rate():
                             db.session.add(interest_rate)
                     else:
                         flash('Пользователь не найден.', 'danger')
-                        return redirect(url_for('set_interest_rate'))
+                        return redirect(url_for('manager_panel'))
                 else:
                     # Если пользователь не указан, обновляем глобальную процентную ставку
                     interest_rate = InterestRate.query.filter_by(user_id=0).first()
@@ -295,7 +295,7 @@ def set_interest_rate():
         global_rate = InterestRate.query.filter_by(user_id=0).first()
         current_rate = global_rate.rate if global_rate else None
 
-    return render_template('set_interest_rate.html', title='Регулирование Процентной Ставки', current_rate=current_rate)
+    return render_template('manager_panel.html', title='Регулирование Процентной Ставки', current_rate=current_rate)
 
 
 # API для получения информации о накоплениях
