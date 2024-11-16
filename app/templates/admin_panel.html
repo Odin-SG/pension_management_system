@@ -30,7 +30,7 @@
                         <tr>
                             <td>{{ user.id }}</td>
                             <td>{{ user.username }}</td>
-                            <td>{{ user.total_amount }}</td>
+                            <td>{{ user.total_amount|format_currency }}</td>
                             <td>
                                 <button class="view-user-button" data-user-id="{{ user.id }}">Посмотреть</button>
                                 <button class="edit-user-button" data-user-id="{{ user.id }}">Редактировать</button>
@@ -41,14 +41,17 @@
             </table>
         </section>
 
-        <section id="user-details" class="container" style="display: none;">
-            <h2>Информация о пользователе</h2>
-            <p>Логин: <strong id="user-username"></strong></p>
-            <p>Роль: <strong id="user-role"></strong></p>
-            <p>Общая сумма накоплений: <strong id="user-total-amount"></strong> руб.</p>
-            <h3>История вкладов:</h3>
-            <ul id="user-history"></ul>
-        </section>
+        <div id="user-details-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button details-close-button">&times;</span>
+                <h2>Информация о пользователе</h2>
+                <p>Логин: <strong id="modal-user-username"></strong></p>
+                <p>Роль: <strong id="modal-user-role"></strong></p>
+                <p>Общая сумма накоплений: <strong id="modal-user-total-amount"></strong> руб.</p>
+                <h3>История вкладов:</h3>
+                <ul id="modal-user-history"></ul>
+            </div>
+        </div>
 
         <div id="edit-user-modal" class="modal">
             <div class="modal-content">
