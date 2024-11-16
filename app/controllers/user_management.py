@@ -48,6 +48,7 @@ def authenticate_user(username, password):
     # Если пользователь не найден или пароль неверный
     return None
 
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -56,6 +57,19 @@ def admin_required(f):
             flash('Доступ разрешен только администраторам.', 'danger')
             return redirect(url_for('dashboard'))
         return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def manager_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_role = session.get('role')
+        if user_role != 'manager':
+            flash('Доступ разрешен только менеджерам.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+
     return decorated_function
 
 

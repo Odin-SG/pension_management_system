@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from .models import db, User, PensionFund
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
-from .controllers.user_management import register_user, authenticate_user, admin_required
+from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required
 from datetime import datetime
 
 # Создание приложения Flask
@@ -237,6 +237,65 @@ def admin_panel():
                            title='Панель Администратора',
                            users=user_data)
 
+
+@app.route('/set_interest_rate', methods=['GET', 'POST'])
+@manager_required
+def set_interest_rate():
+    """
+    Регулирование годовой процентной ставки по вкладу для конкретного пользователя. Доступно только менеджерам.
+    """
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        new_rate = float(request.form.get('interest_rate'))
+        if new_rate <= 0:
+            flash('Процентная ставка должна быть положительной.', 'danger')
+        else:
+            try:
+                # Проверяем, указан ли пользователь
+                if user_id:
+                    user = User.query.get(user_id)
+                    if user:
+                        # Устанавливаем персональную процентную ставку для пользователя
+                        interest_rate = InterestRate.query.filter_by(user_id=user.id).first()
+                        if interest_rate:
+                            interest_rate.rate = new_rate
+                        else:
+                            interest_rate = InterestRate(user_id=user.id, rate=new_rate)
+                            db.session.add(interest_rate)
+                    else:
+                        flash('Пользователь не найден.', 'danger')
+                        return redirect(url_for('set_interest_rate'))
+                else:
+                    # Если пользователь не указан, обновляем глобальную процентную ставку
+                    interest_rate = InterestRate.query.filter_by(user_id=0).first()
+                    if interest_rate:
+                        interest_rate.rate = new_rate
+                    else:
+                        interest_rate = InterestRate(user_id=0, rate=new_rate)
+                        db.session.add(interest_rate)
+
+                db.session.commit()
+                flash('Процентная ставка успешно обновлена.', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash('Ошибка при обновлении процентной ставки. Пожалуйста, попробуйте снова.', 'danger')
+    # Получаем текущую процентную ставку для отображения на странице
+    user_id = request.args.get('user_id')
+    current_rate = None
+    if user_id:
+        interest_rate = InterestRate.query.filter_by(user_id=user_id).first()
+        if interest_rate:
+            current_rate = interest_rate.rate
+        else:
+            # Если для пользователя ставка не установлена, берем глобальную
+            global_rate = InterestRate.query.filter_by(user_id=0).first()
+            current_rate = global_rate.rate if global_rate else None
+    else:
+        # Если пользователь не указан, берем глобальную ставку
+        global_rate = InterestRate.query.filter_by(user_id=0).first()
+        current_rate = global_rate.rate if global_rate else None
+
+    return render_template('set_interest_rate.html', title='Регулирование Процентной Ставки', current_rate=current_rate)
 
 
 # API для получения информации о накоплениях
