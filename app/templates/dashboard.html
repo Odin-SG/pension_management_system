@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </head>
 <body>
     <header>
@@ -76,41 +77,5 @@
         &copy; 2024 Управление Пенсионными Накоплениями
     </footer>
 
-    <script>
-        // Открытие и закрытие модальных окон
-        $(document).ready(function() {
-            var contributeModal = $('#contribute-modal');
-            var withdrawModal = $('#withdraw-modal');
-            var contributeButton = $('#contribute-button');
-            var withdrawButton = $('#withdraw-button');
-            var closeButton = $('.close-button');
-            var withdrawCloseButton = $('.withdraw-close-button');
-
-            contributeButton.on('click', function() {
-                contributeModal.show();
-            });
-
-            withdrawButton.on('click', function() {
-                withdrawModal.show();
-            });
-
-            closeButton.on('click', function() {
-                contributeModal.hide();
-            });
-
-            withdrawCloseButton.on('click', function() {
-                withdrawModal.hide();
-            });
-
-            $(window).on('click', function(event) {
-                if ($(event.target).is(contributeModal)) {
-                    contributeModal.hide();
-                }
-                if ($(event.target).is(withdrawModal)) {
-                    withdrawModal.hide();
-                }
-            });
-        });
-    </script>
 </body>
 </html>
