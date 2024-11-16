@@ -38,6 +38,9 @@
             <h2>Прогнозируемая доходность</h2>
             <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return }}</strong> руб.</p>
         </section>
+        {% if session['role'] == 'admin' %}
+            <a href="/admin_panel" class="button">Перейти в Админ Панель</a>
+        {% endif %}
         <button id="contribute-button" class="button">Пополнить Накопления</button>
         <button id="withdraw-button" class="button">Снять Средства</button>
         <a href="/logout" class="button">Выйти</a>
