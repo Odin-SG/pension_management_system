@@ -76,11 +76,13 @@ $(document).ready(function() {
             if (data.specific_user) {
                 $('#modal-user-username').text(data.specific_user.username);
                 $('#modal-user-role').text(data.specific_user.role);
-                $('#modal-user-total-amount').text(data.specific_user.total_amount);
+                $('#modal-user-total-amount').text(
+                    new Intl.NumberFormat('ru-RU', { style: 'decimal', minimumFractionDigits: 2 }).format(data.specific_user.total_amount)
+                );
 
                 var historyHtml = '';
                 data.user_history.forEach(function(entry) {
-                    historyHtml += '<li>Сумма: ' + entry.amount + ' руб., Дата: ' + entry.contribution_date + '</li>';
+                    historyHtml += '<li>Сумма: ' + new Intl.NumberFormat('ru-RU', { style: 'decimal', minimumFractionDigits: 2 }).format(entry.amount) + ' руб., Дата: ' + entry.contribution_date + '</li>';
                 });
                 $('#modal-user-history').html(historyHtml);
 
