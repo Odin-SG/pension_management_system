@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
-from .models import db, User, PensionFund, InterestRate
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
+from .controllers.generate_report import PDFReport, generate_user_report, get_report_path
+from .models import db, User, PensionFund, InterestRate, Report
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
 from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required
 from datetime import datetime
@@ -302,6 +303,65 @@ def manager_panel():
         current_rate = global_rate.rate if global_rate else None
 
     return render_template('manager_panel.html', title='Регулирование Процентной Ставки', current_rate=current_rate)
+
+
+# Эндпоинт для генерации отчета по накоплениям пользователя
+@app.route('/generate_report', methods=['GET'])
+def generate_report():
+    """
+    Эндпоинт для генерации отчета по накоплениям пользователя в формате PDF.
+    """
+    user_id = request.args.get('user_id')
+    if not user_id:
+        flash('ID пользователя не предоставлен.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    report_path, error = generate_user_report(user_id)
+    if error:
+        flash(error, 'danger')
+        return redirect(url_for('dashboard'))
+
+    flash('Отчет успешно сгенерирован.', 'success')
+    return send_file(report_path, as_attachment=True, download_name=report_path.split('/')[-1])
+
+
+# Эндпоинт для отображения всех существующих отчетов
+@app.route('/reports', methods=['GET'])
+def reports():
+    """
+    Эндпоинт для получения всех существующих отчетов, чтобы фронт мог отобразить их.
+    """
+    reports = Report.query.all()
+    reports_list = [
+        {
+            'report_id': report.id,
+            'user_id': report.user_id,
+            'filename': report.filename,
+            'created_at': report.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        }
+        for report in reports
+    ]
+    return render_template('reports.html', title='Список Отчетов', reports=reports_list)
+
+
+
+# Эндпоинт для загрузки сохраненного отчета
+@app.route('/download_report', methods=['GET'])
+def download_report():
+    """
+    Эндпоинт для загрузки сохраненного отчета по его ID.
+    """
+    report_id = request.args.get('report_id')
+    if not report_id:
+        flash('ID отчета не предоставлен.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    report_path, error = get_report_path(report_id)
+    if error:
+        flash(error, 'danger')
+        return redirect(url_for('dashboard'))
+
+    return send_file(report_path, as_attachment=True, download_name=report_path.split('/')[-1])
 
 
 # API для получения информации о накоплениях
