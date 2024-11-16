@@ -39,3 +39,14 @@ class PensionFund(db.Model):
 
     def __repr__(self):
         return f'<PensionFund User ID {self.user_id} Amount {self.amount}>'
+
+
+class InterestRate(db.Model):
+    __tablename__ = 'interest_rate'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False, default=0)  # user_id = 0 означает глобальная ставка
+    rate = db.Column(db.Float, nullable=False)
+
+    def __repr__(self):
+        return f'<InterestRate User ID {self.user_id} Rate {self.rate}>'
