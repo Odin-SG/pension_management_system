@@ -78,8 +78,14 @@ def dashboard():
     details = pension_data['details']
 
     # Рассчитываем прогнозируемую доходность
+    interest_rate_entry = InterestRate.query.filter_by(user_id=user.id).first()
+    if interest_rate_entry:
+        interest_rate = interest_rate_entry.rate
+    else:
+        global_rate_entry = InterestRate.query.filter_by(user_id=0).first()
+        interest_rate = global_rate_entry.rate
+
     years = 10
-    interest_rate = 5.0  # Процентная ставка
     projected_data = calculate_projected_return(user_id=user.id, interest_rate=interest_rate / 100, years=years)
     projected_return = projected_data['projected_return']
 
