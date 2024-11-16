@@ -18,7 +18,7 @@
         <p>Добро пожаловать, {{ username }}!</p>
         <section class="container">
             <h2>Текущие пенсионные накопления</h2>
-            <p>Общая сумма накоплений: <strong>{{ total_amount }}</strong> руб.</p>
+            <p>Общая сумма накоплений: <strong>{{ total_amount|format_currency }}</strong> руб.</p>
             <h3>Детали вкладов:</h3>
             <table class="contribution-table">
                 <thead>
@@ -30,14 +30,14 @@
                 <tbody>
                     {% for detail in details %}
                         <tr class="{{ loop.cycle('odd', 'even') }}">
-                            <td>{{ detail.amount }}</td>
+                            <td>{{ detail.amount|format_currency }}</td>
                             <td>{{ detail.contribution_date }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
             <h2>Прогнозируемая доходность</h2>
-            <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return }}</strong> руб.</p>
+            <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return|format_currency }}</strong> руб.</p>
         </section>
         {% if session['role'] == 'admin' %}
             <a href="/admin_panel" class="button">Перейти в Админ Панель</a>

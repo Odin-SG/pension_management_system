@@ -3,8 +3,11 @@ from .models import db, User, PensionFund
 from .views import create_app
 from .controllers.pension_calculator import calculate_pension
 from .controllers.user_management import register_user, authenticate_user
+from .utils.filters import format_currency
 
 app = create_app()
+
+app.jinja_env.filters['format_currency'] = format_currency
 
 # Настройка и инициализация базы данных
 with app.app_context():
