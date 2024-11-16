@@ -20,6 +20,9 @@ def index():
 # Страница регистрации пользователя
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if 'username' in session:
+        return redirect(url_for('dashboard'))
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -34,6 +37,9 @@ def register():
 # Страница входа пользователя
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if 'username' in session:
+        return redirect(url_for('dashboard'))
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
