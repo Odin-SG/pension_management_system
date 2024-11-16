@@ -62,7 +62,7 @@ def generate_user_report(user_id):
     data = [[str(fund.amount or 0), fund.contribution_date.strftime('%Y-%m-%d') or 'N/A'] for fund in funds]
     pdf.add_table(data, headers)
 
-    report_dir = f'app/reports/{user.username}'
+    report_dir = f'reports/{user.username}'
     if not os.path.exists(report_dir):
         os.makedirs(report_dir)
     report_filename = f'{datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")}_{user.username}.pdf'

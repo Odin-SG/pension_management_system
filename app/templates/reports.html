@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Отчеты по Накоплениям</title>
+    <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -19,7 +19,13 @@
             <div id="reports-list-container">
                 <h2>Список Отчетов</h2>
                 <ul id="reports-list">
-                    <!-- Список отчетов будет загружаться здесь -->
+                    {% for report in reports %}
+                        <li>
+                            <a href="/download_report?report_id={{ report['report_id'] }}" class="download-report-link">
+                                Отчет для пользователя {{ report['user_id'] }} ({{ report['filename'] }}) - создан: {{ report['created_at'] }}
+                            </a>
+                        </li>
+                    {% endfor %}
                 </ul>
             </div>
         </section>
@@ -31,101 +37,64 @@
 
     <script>
         $(document).ready(function() {
-            // Получение списка отчетов при загрузке страницы
-            function loadReports() {
-                $.get("/list_reports", function(data) {
-                    var reports = data.reports;
-                    var reportsList = $('#reports-list');
-                    reportsList.empty();
+            // Генерация отчета с обновлением списка
+            $('#generate-report-button').on('click', function() {
+                var userId = '{{ session.get("user_id") }}'; // ID текущего пользователя из сессии
+                if (userId && userId !== 'None') {
+                    $.ajax({
+                        url: '/generate_report',
+                        type: 'GET',
+                        data: { user_id: userId },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.message || 'Отчет успешно сгенерирован');
+                                loadReports(); // Обновляем список отчетов
+                            } else {
+                                alert('Ошибка: ' + (response.error || 'Неизвестная ошибка'));
+                            }
+                        },
+                        error: function(xhr) {
+                            alert('Ошибка при генерации отчета: ' + xhr.responseText);
+                        }
+                    });
+                } else {
+                    alert('Ошибка: ID пользователя не найден в сессии.');
+                }
+            });
 
-                    if (reports.length === 0) {
-                        reportsList.append('<li>Пусто</li>');
-                    } else {
-                        reports.forEach(function(report) {
-                            var listItem = '<li>' +
-                                '<a href="#" class="download-report-link" data-report-id="' + report.report_id + '">' +
-                                'Отчет для пользователя ' + report.user_id + ' (' + report.filename + ') - создан: ' + report.created_at +
-                                '</a>' +
-                                '</li>';
-                            reportsList.append(listItem);
-                        });
+            // Функция для загрузки списка отчетов
+            function loadReports() {
+                $.ajax({
+                    url: '/reports',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        var reportsList = $('#reports-list');
+                        reportsList.empty();
+
+                        // Проверяем, есть ли данные об отчетах
+                        if (data.reports && data.reports.length > 0) {
+                            data.reports.forEach(function(report) {
+                                var listItem = '<li>' +
+                                    '<a href="/download_report?report_id=' + report.report_id + '">' +
+                                    'Отчет для пользователя ' + report.user_id + ' (' + report.filename + ') - создан: ' + report.created_at +
+                                    '</a>' +
+                                    '</li>';
+                                reportsList.append(listItem);
+                            });
+                        } else {
+                            reportsList.append('<li>Пусто</li>');
+                        }
+                    },
+                    error: function() {
+                        alert('Ошибка при загрузке списка отчетов. Пожалуйста, попробуйте позже.');
                     }
                 });
             }
-
-            // Загрузка отчета при нажатии на ссылку
-            $(document).on('click', '.download-report-link', function(event) {
-                event.preventDefault();
-                var reportId = $(this).data('report-id');
-                window.location.href = '/download_report?report_id=' + reportId;
-            });
-
-            // Генерация отчета
-            $('#generate-report-button').on('click', function() {
-                var userId = prompt("Введите ID пользователя для генерации отчета:");
-                if (userId) {
-                    $.get("/generate_report", { user_id: userId }, function(response) {
-                        if (response.includes('успешно')) {
-                            alert('Отчет успешно сгенерирован');
-                            loadReports();
-                        } else {
-                            alert('Ошибка при генерации отчета: ' + response);
-                        }
-                    });
-                }
-            });
 
             // Загрузка списка отчетов при загрузке страницы
             loadReports();
         });
     </script>
-
-    <style>
-        .container {
-            margin: 20px auto;
-            max-width: 600px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin-top: 10px;
-            cursor: pointer;
-            border: none;
-            border-radius: 4px;
-        }
-
-        .button:hover {
-            background-color: #45a049;
-        }
-
-        #reports-list {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        #reports-list li {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        #reports-list a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        #reports-list a:hover {
-            text-decoration: underline;
-        }
-    </style>
 </body>
 </html>

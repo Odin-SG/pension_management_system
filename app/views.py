@@ -43,6 +43,7 @@ def login():
             # Сохраняем имя пользователя и роль в сессии
             session['username'] = user.username
             session['role'] = user.role  # Используем роль из объекта пользователя
+            session['user_id'] = user.id
             flash('Успешный вход!', 'success')
             print(f"Logged in as: {session.get('username')}, Role: {session.get('role')}")  # Отладка
             return redirect(url_for('dashboard'))
@@ -305,33 +306,20 @@ def manager_panel():
     return render_template('manager_panel.html', title='Регулирование Процентной Ставки', current_rate=current_rate)
 
 
-# Эндпоинт для генерации отчета по накоплениям пользователя
-@app.route('/generate_report', methods=['GET'])
-def generate_report():
-    """
-    Эндпоинт для генерации отчета по накоплениям пользователя в формате PDF.
-    """
-    user_id = request.args.get('user_id')
-    if not user_id:
-        flash('ID пользователя не предоставлен.', 'danger')
-        return redirect(url_for('dashboard'))
-
-    report_path, error = generate_user_report(user_id)
-    if error:
-        flash(error, 'danger')
-        return redirect(url_for('dashboard'))
-
-    flash('Отчет успешно сгенерирован.', 'success')
-    return send_file(report_path, as_attachment=True, download_name=report_path.split('/')[-1])
-
-
 # Эндпоинт для отображения всех существующих отчетов
 @app.route('/reports', methods=['GET'])
 def reports():
     """
-    Эндпоинт для получения всех существующих отчетов, чтобы фронт мог отобразить их.
+    Эндпоинт для отображения списка отчетов или возврата их в формате JSON.
     """
-    reports = Report.query.all()
+    user_role = session.get('role')
+    user_id = session.get('user_id')
+
+    if user_role == 'admin':
+        reports = Report.query.all()
+    else:
+        reports = Report.query.filter_by(user_id=user_id).all()
+
     reports_list = [
         {
             'report_id': report.id,
@@ -341,8 +329,30 @@ def reports():
         }
         for report in reports
     ]
+
+    # Если запрос сделан с ожидаемым JSON-ответом
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify(reports=reports_list)
+
+    # Иначе возвращаем страницу
     return render_template('reports.html', title='Список Отчетов', reports=reports_list)
 
+
+# Эндпоинт для генерации отчета по накоплениям пользователя
+@app.route('/generate_report', methods=['GET'])
+def generate_report():
+    """
+    Эндпоинт для генерации отчета по накоплениям пользователя в формате PDF.
+    """
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify(success=False, error="ID пользователя не предоставлен"), 400
+
+    report_path, error = generate_user_report(user_id)
+    if error:
+        return jsonify(success=False, error=error), 500
+
+    return jsonify(success=True, message="Отчет успешно сгенерирован")
 
 
 # Эндпоинт для загрузки сохраненного отчета
@@ -354,12 +364,12 @@ def download_report():
     report_id = request.args.get('report_id')
     if not report_id:
         flash('ID отчета не предоставлен.', 'danger')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('reports'))
 
     report_path, error = get_report_path(report_id)
     if error:
         flash(error, 'danger')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('reports'))
 
     return send_file(report_path, as_attachment=True, download_name=report_path.split('/')[-1])
 
