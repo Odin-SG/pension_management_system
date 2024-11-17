@@ -38,6 +38,7 @@
             </table>
             <h2>Прогнозируемая доходность</h2>
             <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return|format_currency }}</strong> руб.</p>
+            <a href="/investments" class="button investments-button">Перейти к инвестициям</a>
         </section>
         {% if session['role'] == 'admin' %}
             <a href="/admin_panel" class="button">Перейти в Админ Панель</a>
@@ -79,6 +80,5 @@
     <footer>
         &copy; 2024 Управление Пенсионными Накоплениями
     </footer>
-
 </body>
 </html>

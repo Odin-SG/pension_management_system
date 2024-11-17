@@ -198,3 +198,19 @@ footer {
 .sell-button:hover {
     background-color: #c82333;
 }
+
+.investments-button {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.investments-button:hover {
+    background-color: #218838;
+}
