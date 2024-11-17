@@ -402,40 +402,76 @@ def investments():
     return render_template('investments.html', stocks=stocks, investments=investments)
 
 
+@app.route('/get_prices', methods=['GET'])
+def get_prices():
+    """
+    Возвращает текущие цены на акции.
+    """
+    stocks = Stock.query.all()
+    prices = [
+        {'ticker': stock.ticker, 'price': stock.current_price}
+        for stock in stocks
+    ]
+    return jsonify(prices)
+
+
 @app.route('/buy_stock', methods=['POST'])
 @login_required
 def buy_stock():
     """
-    Покупка акций.
+    Покупка акций с использованием транзакционной системы.
     """
     user_id = session.get('user_id')
     stock_id = request.form.get('stock_id')
     quantity = float(request.form.get('quantity'))
 
+    # Получаем информацию об акции
     stock = Stock.query.get(stock_id)
     if not stock:
         flash('Акция не найдена.', 'danger')
         return redirect(url_for('investments'))
 
+    # Рассчитываем общую стоимость
     total_cost = stock.current_price * quantity
-    user = User.query.get(user_id)
 
-    if user.balance < total_cost:
+    # Рассчитываем доступный баланс пользователя
+    funds = PensionFund.query.filter_by(user_id=user_id).all()
+    available_balance = sum(fund.amount for fund in funds)
+
+    if available_balance < total_cost:
         flash('Недостаточно средств для покупки акций.', 'danger')
         return redirect(url_for('investments'))
 
-    # Списываем деньги и добавляем инвестицию
-    user.balance -= total_cost
+    # Списываем деньги из доступных средств (создаём запись с отрицательной суммой)
+    new_transaction = PensionFund(
+        user_id=user_id,
+        amount=-total_cost,
+        contribution_date=datetime.utcnow()
+    )
+    db.session.add(new_transaction)
+
+    # Добавляем акции в портфель пользователя
     investment = Investment.query.filter_by(user_id=user_id, stock_id=stock_id).first()
     if investment:
         investment.quantity += quantity
         investment.invested_amount += total_cost
     else:
-        investment = Investment(user_id=user_id, stock_id=stock_id, quantity=quantity, invested_amount=total_cost)
+        investment = Investment(
+            user_id=user_id,
+            stock_id=stock_id,
+            quantity=quantity,
+            invested_amount=total_cost
+        )
         db.session.add(investment)
 
-    db.session.commit()
-    flash('Акции успешно куплены.', 'success')
+    # Сохраняем изменения
+    try:
+        db.session.commit()
+        flash('Акции успешно куплены.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Ошибка при покупке акций. Попробуйте снова.', 'danger')
+
     return redirect(url_for('investments'))
 
 

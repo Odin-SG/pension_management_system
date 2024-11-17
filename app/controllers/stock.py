@@ -1,6 +1,6 @@
 import random
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 from app import db
 from app.models import Stock, StockPriceHistory
 

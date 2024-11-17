@@ -86,6 +86,13 @@ class Investment(db.Model):
     quantity = db.Column(db.Float, nullable=False)  # Количество акций
     invested_amount = db.Column(db.Float, nullable=False)  # Общая сумма инвестиций
 
+    # Реляция к таблице Stock
+    stock = db.relationship('Stock', backref='investments')
+
+    def __repr__(self):
+        return f'<Investment {self.user_id} - {self.stock_id} ({self.quantity} шт.)>'
+
+
 class StockPriceHistory(db.Model):
     __tablename__ = 'stock_price_history'
 
