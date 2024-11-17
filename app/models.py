@@ -62,3 +62,26 @@ class Report(db.Model):
 
     def __repr__(self):
         return f'<Report {self.filename}>'
+
+
+class Stock(db.Model):
+    __tablename__ = 'stocks'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    ticker = db.Column(db.String(10), nullable=False, unique=True)
+    current_price = db.Column(db.Float, nullable=False)
+    trend = db.Column(db.Float, default=0.0)  # Например, +0.1 для растущего тренда
+
+    def __repr__(self):
+        return f'<Stock {self.ticker} - {self.current_price}>'
+
+
+class Investment(db.Model):
+    __tablename__ = 'investments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'), nullable=False)
+    quantity = db.Column(db.Float, nullable=False)  # Количество акций
+    invested_amount = db.Column(db.Float, nullable=False)  # Общая сумма инвестиций
