@@ -42,6 +42,9 @@
         {% if session['role'] == 'admin' %}
             <a href="/admin_panel" class="button">Перейти в Админ Панель</a>
         {% endif %}
+       {% if session['role'] == 'manager' %}
+            <a href="/admin_panel" class="button">Перейти в панель менеджера</a>
+        {% endif %}
         <button id="contribute-button" class="button">Пополнить Накопления</button>
         <button id="withdraw-button" class="button">Снять Средства</button>
         <a href="/logout" class="button">Выйти</a>
