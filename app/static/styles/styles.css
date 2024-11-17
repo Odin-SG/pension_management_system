@@ -215,3 +215,19 @@ footer {
 .investments-button:hover {
     background-color: #218838;
 }
+
+.reports-button {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    background-color: #17a2b8; /* Цвет кнопки */
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.reports-button:hover {
+    background-color: #138496; /* Цвет кнопки при наведении */
+}
