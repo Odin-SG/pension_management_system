@@ -396,10 +396,27 @@ def investments():
     """
     Страница инвестиций: отображение доступных акций и текущего портфеля пользователя.
     """
-    stocks = Stock.query.all()
     user_id = session.get('user_id')
+
+    # Доступные акции
+    stocks = Stock.query.all()
+
+    # Инвестиции пользователя
     investments = Investment.query.filter_by(user_id=user_id).all()
-    return render_template('investments.html', stocks=stocks, investments=investments)
+    investment_data = []
+    for investment in investments:
+        stock = investment.stock
+        average_price = investment.invested_amount / investment.quantity
+        investment_data.append({
+            'quantity': investment.quantity,
+            'stock_name': stock.name,
+            'total_amount': f"{investment.invested_amount:,.2f}".replace(',', ' '),
+            'ticker': stock.ticker,
+            'average_price': f"{average_price:,.2f}".replace(',', ' '),
+            'stock_id': investment.stock_id
+        })
+
+    return render_template('investments.html', stocks=stocks, investments=investment_data)
 
 
 @app.route('/get_prices', methods=['GET'])
@@ -473,6 +490,52 @@ def buy_stock():
         flash('Ошибка при покупке акций. Попробуйте снова.', 'danger')
 
     return redirect(url_for('investments'))
+
+
+@app.route('/sell_stock', methods=['POST'])
+@login_required
+def sell_stock():
+    """
+    Продажа акций.
+    """
+    user_id = session.get('user_id')
+    stock_id = request.form.get('stock_id')  # Получаем ID акции из запроса
+    quantity_to_sell = float(request.form.get('quantity'))  # Количество акций для продажи
+
+    # Получаем информацию об инвестициях
+    investment = Investment.query.filter_by(user_id=user_id, stock_id=stock_id).first()
+    if not investment or investment.quantity < quantity_to_sell:
+        return jsonify({'success': False, 'message': 'Недостаточно акций для продажи.'}), 400
+
+    # Получаем информацию об акции
+    stock = Stock.query.get(stock_id)
+    if not stock:
+        return jsonify({'success': False, 'message': 'Акция не найдена.'}), 404
+
+    # Рассчитываем доход от продажи
+    total_income = stock.current_price * quantity_to_sell
+
+    # Обновляем инвестиции
+    investment.quantity -= quantity_to_sell
+    investment.invested_amount -= total_income
+    if investment.quantity == 0:
+        db.session.delete(investment)  # Удаляем инвестицию, если количество акций = 0
+
+    # Добавляем запись в транзакции
+    new_transaction = PensionFund(
+        user_id=user_id,
+        amount=total_income,
+        contribution_date=datetime.utcnow()
+    )
+    db.session.add(new_transaction)
+
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Акции успешно проданы!'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Ошибка при продаже акций. Попробуйте снова.'}), 500
+
 
 
 @app.route('/stock_prices/<int:stock_id>', methods=['GET'])

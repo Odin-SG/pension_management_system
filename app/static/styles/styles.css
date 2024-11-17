@@ -189,3 +189,12 @@ footer {
 #reports-list a:hover {
     text-decoration: underline;
 }
+
+.sell-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.sell-button:hover {
+    background-color: #c82333;
+}

@@ -154,4 +154,69 @@ $(document).ready(function() {
             this.submit();
         }
     });
+
+    console.log("JS успешно подключен!");
+
+        // Обновление цен акций
+    function updatePrices() {
+        fetch('/get_prices')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(stock => {
+                    const priceElement = document.querySelector(`#price-${stock.ticker}`);
+                    if (priceElement) {
+                        priceElement.textContent = new Intl.NumberFormat('ru-RU', { style: 'decimal', minimumFractionDigits: 2 }).format(stock.price);
+                    }
+                });
+            })
+            .catch(error => console.error('Ошибка при обновлении цен:', error));
+    }
+
+    setInterval(updatePrices, 1000);
+
+    $(document).on('click', '.sell-button', function(event) {
+        event.preventDefault(); // Останавливаем стандартное поведение формы
+        const form = $(this).closest('form');
+        const stockId = form.find('input[name="stock_id"]').val(); // Получаем ID акции
+        const quantity = form.find('input[name="quantity"]').val(); // Количество акций для продажи
+
+        if (!quantity || quantity <= 0) {
+            alert('Введите корректное количество акций для продажи.');
+            return;
+        }
+
+        fetch('/sell_stock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `stock_id=${stockId}&quantity=${quantity}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                loadInvestments(); // Обновляем список инвестиций
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при продаже акций. Попробуйте снова.');
+        });
+    });
+
+    function loadInvestments() {
+        fetch('/investments')
+            .then(response => response.text())
+            .then(html => {
+                const newContent = $(html).find('.investments').html();
+                $('.investments').html(newContent);
+            })
+            .catch(error => {
+                console.error('Ошибка при обновлении инвестиций:', error);
+            });
+    }
+
 });
