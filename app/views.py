@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 from .controllers.generate_report import PDFReport, generate_user_report, get_report_path
-from .models import db, User, PensionFund, InterestRate, Report
+from .models import db, User, PensionFund, InterestRate, Report, Investment, Stock
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
-from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required, login_required
+from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required, \
+    login_required
 from datetime import datetime
 
 # Создание приложения Flask
@@ -19,6 +20,7 @@ def index():
 
 # Страница регистрации пользователя
 @app.route('/register', methods=['GET', 'POST'])
+@login_required
 def register():
     if 'username' in session:
         return redirect(url_for('dashboard'))
@@ -36,6 +38,7 @@ def register():
 
 # Страница входа пользователя
 @app.route('/login', methods=['GET', 'POST'])
+@login_required
 def login():
     if 'username' in session:
         return redirect(url_for('dashboard'))
@@ -60,6 +63,7 @@ def login():
 
 
 @app.route('/logout')
+@login_required
 def logout():
     """
     Выход пользователя из системы, очистка сессии.
@@ -71,6 +75,7 @@ def logout():
 
 # Личный кабинет пользователя
 @app.route('/dashboard')
+@login_required
 def dashboard():
     # Предположим, что данные пользователя находятся в сессии (например, после авторизации)
     username = session.get('username', 'Гость')
@@ -111,6 +116,7 @@ def dashboard():
 
 
 @app.route('/contribute', methods=['POST'])
+@login_required
 def contribute():
     """
     Внесение средств в пенсионные накопления пользователя.
@@ -143,6 +149,7 @@ def contribute():
 
 
 @app.route('/withdraw', methods=['POST'])
+@login_required
 def withdraw():
     """
     Снятие средств из пенсионных накоплений пользователя.
@@ -314,6 +321,7 @@ def manager_panel():
 
 # Эндпоинт для отображения всех существующих отчетов
 @app.route('/reports', methods=['GET'])
+@login_required
 def reports():
     """
     Эндпоинт для отображения списка отчетов или возврата их в формате JSON.
@@ -346,6 +354,7 @@ def reports():
 
 # Эндпоинт для генерации отчета по накоплениям пользователя
 @app.route('/generate_report', methods=['GET'])
+@login_required
 def generate_report():
     """
     Эндпоинт для генерации отчета по накоплениям пользователя в формате PDF.
@@ -363,6 +372,7 @@ def generate_report():
 
 # Эндпоинт для загрузки сохраненного отчета
 @app.route('/download_report', methods=['GET'])
+@login_required
 def download_report():
     """
     Эндпоинт для загрузки сохраненного отчета по его ID.
@@ -380,27 +390,66 @@ def download_report():
     return send_file(report_path, as_attachment=True, download_name=report_path.split('/')[-1])
 
 
-@app.route('/analysis', methods=['GET'])
+@app.route('/investments', methods=['GET'])
 @login_required
-def analysis():
+def investments():
     """
-    Страница анализа накоплений.
+    Страница инвестиций: отображение доступных акций и текущего портфеля пользователя.
+    """
+    stocks = Stock.query.all()
+    user_id = session.get('user_id')
+    investments = Investment.query.filter_by(user_id=user_id).all()
+    return render_template('investments.html', stocks=stocks, investments=investments)
+
+
+@app.route('/buy_stock', methods=['POST'])
+@login_required
+def buy_stock():
+    """
+    Покупка акций.
     """
     user_id = session.get('user_id')
-    user_data = PensionFund.query.filter_by(user_id=user_id).all()
+    stock_id = request.form.get('stock_id')
+    quantity = float(request.form.get('quantity'))
 
-    contribution_dates = [data.contribution_date.strftime('%Y-%m-%d') for data in user_data]
-    amounts = [data.amount for data in user_data]
+    stock = Stock.query.get(stock_id)
+    if not stock:
+        flash('Акция не найдена.', 'danger')
+        return redirect(url_for('investments'))
 
-    projected_return = calculate_projected_return(user_id=user_id, interest_rate=5 / 100, years=10)
+    total_cost = stock.current_price * quantity
+    user = User.query.get(user_id)
 
-    return render_template(
-        'analysis.html',
-        contribution_dates=contribution_dates,
-        amounts=amounts,
-        projected_return=projected_return['projected_return']
-    )
+    if user.balance < total_cost:
+        flash('Недостаточно средств для покупки акций.', 'danger')
+        return redirect(url_for('investments'))
 
+    # Списываем деньги и добавляем инвестицию
+    user.balance -= total_cost
+    investment = Investment.query.filter_by(user_id=user_id, stock_id=stock_id).first()
+    if investment:
+        investment.quantity += quantity
+        investment.invested_amount += total_cost
+    else:
+        investment = Investment(user_id=user_id, stock_id=stock_id, quantity=quantity, invested_amount=total_cost)
+        db.session.add(investment)
+
+    db.session.commit()
+    flash('Акции успешно куплены.', 'success')
+    return redirect(url_for('investments'))
+
+
+@app.route('/stock_prices/<int:stock_id>', methods=['GET'])
+def stock_prices(stock_id):
+    """
+    Возвращает исторические данные о ценах акций в формате JSON.
+    """
+    prices = StockPriceHistory.query.filter_by(stock_id=stock_id).order_by(StockPriceHistory.timestamp).all()
+    data = [
+        {'timestamp': price.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'price': price.price}
+        for price in prices
+    ]
+    return jsonify(data)
 
 # API для получения информации о накоплениях
 @app.route('/api/pension', methods=['GET'])

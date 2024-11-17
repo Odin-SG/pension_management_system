@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инвестиции</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Инвестиции</h1>
+    </header>
+    <main>
+        <section>
+            <h2>Доступные акции</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Тикер</th>
+                        <th>Цена</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                        <tr>
+                            <td>{{ stock.name }}</td>
+                            <td>{{ stock.ticker }}</td>
+                            <td>{{ stock.current_price }}</td>
+                            <td>
+                                <form action="/buy_stock" method="post">
+                                    <input type="hidden" name="stock_id" value="{{ stock.id }}">
+                                    <input type="number" name="quantity" min="1" step="1" required>
+                                    <button type="submit">Купить</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        <section>
+            <h2>Мои инвестиции</h2>
+            <ul>
+                {% for investment in investments %}
+                    <li>{{ investment.quantity }} шт. акций {{ investment.stock.name }} на сумму {{ investment.invested_amount }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </main>
+    <canvas id="stockChart" width="400" height="200"></canvas>
+</body>
+
+<script>
+    function loadStockPrices(stockId) {
+        $.ajax({
+            url: `/stock_prices/${stockId}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                const labels = data.map(entry => entry.timestamp);
+                const prices = data.map(entry => entry.price);
+
+                const ctx = document.getElementById('stockChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Цена акций',
+                            data: prices,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                beginAtZero: false
+                            },
+                            y: {
+                                beginAtZero: false
+                            }
+                        }
+                    }
+                });
+            },
+            error: function() {
+                alert('Ошибка при загрузке данных о ценах.');
+            }
+        });
+    }
+
+    // Пример загрузки графика для акции с ID = 1
+    loadStockPrices(1);
+</script>
+</html>
