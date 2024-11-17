@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from .controllers.generate_report import PDFReport, generate_user_report, get_report_path
 from .models import db, User, PensionFund, InterestRate, Report
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
-from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required
+from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required, login_required
 from datetime import datetime
 
 # Создание приложения Flask
@@ -378,6 +378,28 @@ def download_report():
         return redirect(url_for('reports'))
 
     return send_file(report_path, as_attachment=True, download_name=report_path.split('/')[-1])
+
+
+@app.route('/analysis', methods=['GET'])
+@login_required
+def analysis():
+    """
+    Страница анализа накоплений.
+    """
+    user_id = session.get('user_id')
+    user_data = PensionFund.query.filter_by(user_id=user_id).all()
+
+    contribution_dates = [data.contribution_date.strftime('%Y-%m-%d') for data in user_data]
+    amounts = [data.amount for data in user_data]
+
+    projected_return = calculate_projected_return(user_id=user_id, interest_rate=5 / 100, years=10)
+
+    return render_template(
+        'analysis.html',
+        contribution_dates=contribution_dates,
+        amounts=amounts,
+        projected_return=projected_return['projected_return']
+    )
 
 
 # API для получения информации о накоплениях
