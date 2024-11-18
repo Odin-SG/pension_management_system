@@ -25,12 +25,26 @@ with app.app_context():
         admin_exists = db.engine.execute(
             "SELECT 1 FROM users WHERE role = 'admin' LIMIT 1;"
         ).fetchone()
+        manager_exists = db.engine.execute(
+            "SELECT 1 FROM users WHERE role = 'manager' LIMIT 1;"
+        ).fetchone()
+        usr_exists = db.engine.execute(
+            "SELECT 1 FROM users WHERE role = 'user' LIMIT 1;"
+        ).fetchone()
 
         if not admin_exists:
             admin_user = User(username='admin', role='admin')
-            admin_user.set_password('admin123')
+            admin_user.set_password('admin')
             db.session.add(admin_user)
-            print("Пользователь-администратор создан с логином 'admin' и паролем 'admin123'.")
+        if not manager_exists:
+            manager_user = User(username='manager', role='manager')
+            manager_user.set_password('manager')
+            db.session.add(manager_user)
+        if not usr_exists:
+            usr_user = User(username='user', role='user')
+            usr_user.set_password('user')
+            db.session.add(usr_user)
+
 
     # Проверка на существование глобальной ставки
     global_rate = InterestRate.query.filter_by(user_id=0).first()

@@ -41,9 +41,15 @@ def create_data(app):
             return
 
         stocks = [
-            Stock(name="Акция 1", ticker="A1", current_price=100.0),
-            Stock(name="Акция 2", ticker="A2", current_price=200.0),
-            Stock(name="Акция 3", ticker="A3", current_price=300.0),
+            Stock(name="МТС", ticker="A1", current_price=200.0),
+            Stock(name="Северсталь", ticker="A2", current_price=1200.0),
+            Stock(name="Башнефть", ticker="A3", current_price=2300.0),
+            Stock(name="Аэрофлот", ticker="A4", current_price=60.0),
+            Stock(name="ФосАгро", ticker="A5", current_price=5000.0),
+            Stock(name="Nvidia", ticker="A6", current_price=15000.0),
+            Stock(name="Apple", ticker="A7", current_price=21000.0),
+            Stock(name="Amazon", ticker="A8", current_price=20000.0),
+            Stock(name="Volkswagen", ticker="A9", current_price=83000.0),
         ]
         db.session.add_all(stocks)
         db.session.commit()

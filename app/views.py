@@ -20,7 +20,6 @@ def index():
 
 # Страница регистрации пользователя
 @app.route('/register', methods=['GET', 'POST'])
-@login_required
 def register():
     if 'username' in session:
         return redirect(url_for('dashboard'))
@@ -28,6 +27,15 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+
+        # Проверка на минимальную длину логина и пароля
+        if len(username) < 3:
+            flash('Логин должен содержать не менее 3 символов.', 'danger')
+            return render_template('register.html', title='Регистрация')
+        if len(password) < 3:
+            flash('Пароль должен содержать не менее 3 символов.', 'danger')
+            return render_template('register.html', title='Регистрация')
+
         if register_user(username, password):
             flash('Регистрация прошла успешно!', 'success')
             return redirect(url_for('login'))
@@ -36,9 +44,9 @@ def register():
     return render_template('register.html', title='Регистрация')
 
 
+
 # Страница входа пользователя
 @app.route('/login', methods=['GET', 'POST'])
-@login_required
 def login():
     if 'username' in session:
         return redirect(url_for('dashboard'))
