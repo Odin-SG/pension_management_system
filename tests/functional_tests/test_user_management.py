@@ -56,3 +56,31 @@ def test_register_existing_user(client):
     # Проверка, что количество пользователей с данным именем не увеличилось
     users = User.query.filter_by(username='existinguser').all()
     assert len(users) == 1
+
+
+def test_login_user(client):
+    # Сначала регистрируем пользователя
+    client.post('/register', data={'username': 'testuser', 'password': 'testpassword'})
+
+    # Пытаемся войти с правильными учетными данными
+    response = client.post('/login', data={'username': 'testuser', 'password': 'testpassword'})
+    assert response.status_code == 200
+    assert 'Успешный вход!' in response.data.decode('utf-8')
+
+
+def test_login_invalid_user(client):
+    # Попытка входа с некорректными данными
+    response = client.post('/login', data={'username': 'invaliduser', 'password': 'wrongpassword'})
+    assert response.status_code == 200
+    assert 'Неверное имя пользователя или пароль.' in response.data.decode('utf-8')
+
+
+def test_logout_user(client):
+    # Сначала регистрируем и входим в систему
+    client.post('/register', data={'username': 'testuser', 'password': 'testpassword'})
+    client.post('/login', data={'username': 'testuser', 'password': 'testpassword'})
+
+    # Выполняем выход из системы
+    response = client.get('/logout', follow_redirects=True)
+    assert response.status_code == 200
+    assert 'Вы успешно вышли из системы.' in response.data.decode('utf-8')

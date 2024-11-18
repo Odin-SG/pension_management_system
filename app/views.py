@@ -48,25 +48,39 @@ def register():
 # Страница входа пользователя
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Проверяем, есть ли пользователь уже в сессии
     if 'username' in session:
         return redirect(url_for('dashboard'))
 
+    # Обработка POST-запроса (попытка входа)
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username') if not request.is_json else request.json.get('username')
+        password = request.form.get('password') if not request.is_json else request.json.get('password')
 
+        # Проверка аутентификации пользователя
         user = authenticate_user(username, password)
         if user:
             # Сохраняем имя пользователя и роль в сессии
             session['username'] = user.username
-            session['role'] = user.role  # Используем роль из объекта пользователя
+            session['role'] = user.role
             session['user_id'] = user.id
-            flash('Успешный вход!', 'success')
             print(f"Logged in as: {session.get('username')}, Role: {session.get('role')}")  # Отладка
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Неверное имя пользователя или пароль.', 'danger')
 
+            if request.is_json:
+                # Если это AJAX запрос, возвращаем JSON с успехом
+                return jsonify(success=True)
+            else:
+                # Если это обычный POST, перенаправляем на дашборд
+                return redirect(url_for('dashboard'))
+        else:
+            if request.is_json:
+                # Возвращаем JSON-ответ с ошибкой, если это AJAX запрос
+                return jsonify(success=False, message='Неверное имя пользователя или пароль.'), 400
+            else:
+                # Если это обычный POST, возвращаем ошибку через Flash и остаемся на странице
+                flash('Неверное имя пользователя или пароль.', 'danger')
+
+    # Если метод GET — отображаем форму для входа
     return render_template('login.html', title='Вход')
 
 

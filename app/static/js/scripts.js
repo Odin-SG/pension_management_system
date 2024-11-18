@@ -219,4 +219,31 @@ $(document).ready(function() {
             });
     }
 
+     $('#login-form').on('submit', function(event) {
+    event.preventDefault(); // Предотвращаем стандартное поведение формы
+
+    const formData = {
+        username: $('input[name="username"]').val(),
+        password: $('input[name="password"]').val()
+    };
+
+    $.ajax({
+        url: '/login',
+        type: 'POST',
+        data: JSON.stringify(formData),
+        contentType: 'application/json', // Убедитесь, что тип данных указан как JSON
+        success: function(response) {
+            if (response.success) {
+                // Если вход успешен, перенаправляем на дашборд
+                window.location.href = '/dashboard';
+            }
+        },
+        error: function(xhr) {
+            const errorMessage = xhr.responseJSON ? xhr.responseJSON.message : 'Неизвестная ошибка';
+            // Показываем сообщение об ошибке
+            $('#login-error-message').text(errorMessage).show();
+        }
+    });
+});
+
 });
