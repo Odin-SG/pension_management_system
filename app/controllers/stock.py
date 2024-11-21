@@ -28,7 +28,7 @@ def update_stock_prices(app):
 
             # Сохраняем изменения
             db.session.commit()
-            sleep(1)
+            sleep(5)
 
 
 def create_data(app):

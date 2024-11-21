@@ -172,7 +172,7 @@ $(document).ready(function() {
             .catch(error => console.error('Ошибка при обновлении цен:', error));
     }
 
-    setInterval(updatePrices, 1000);
+    setInterval(updatePrices, 5000);
 
     $(document).on('click', '.sell-button', function(event) {
         event.preventDefault(); // Останавливаем стандартное поведение формы
