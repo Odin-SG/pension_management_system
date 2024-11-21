@@ -246,4 +246,77 @@ $(document).ready(function() {
     });
 });
 
+    const stockChartCanvas = document.getElementById('stockChart');
+    let stockChart;
+
+    // Обработчик кликов по названию акции
+    $('.stock-name').on('click', function() {
+        const stockId = $(this).data('stock-id'); // Получаем ID акции
+        const stockName = $(this).text(); // Название акции для отображения в графике
+
+        // Загружаем данные для графика
+        fetch(`/stock_prices/${stockId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Преобразуем данные для графика
+                const timestamps = data.map(item => item.timestamp);
+                const prices = data.map(item => item.price);
+
+                // Если график уже существует, обновляем его
+                if (stockChart) {
+                    stockChart.data.labels = timestamps;
+                    stockChart.data.datasets[0].data = prices;
+                    stockChart.data.datasets[0].label = `Цены акций: ${stockName}`;
+                    stockChart.update();
+                } else {
+                    // Создаем новый график
+                    stockChart = new Chart(stockChartCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: timestamps,
+                            datasets: [{
+                                label: `Цены акций: ${stockName}`,
+                                data: prices,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    display: true
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Время'
+                                    }
+                                },
+                                y: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Цена'
+                                    },
+                                    beginAtZero: false
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки данных для графика:', error);
+            });
+    });
+
 });

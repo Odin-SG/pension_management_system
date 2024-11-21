@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_file
 from .controllers.generate_report import PDFReport, generate_user_report, get_report_path
-from .models import db, User, PensionFund, InterestRate, Report, Investment, Stock
+from .models import db, User, PensionFund, InterestRate, Report, Investment, Stock, StockPriceHistory
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
 from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required, \
     login_required

@@ -23,35 +23,37 @@
         <h1>Инвестиции</h1>
     </header>
     <div class="container">
-        <section>
-            <h2>Доступные акции</h2>
-            <table class="contribution-table">
-                <thead>
-                    <tr>
-                        <th>Название</th>
-                        <th>Тикер</th>
-                        <th>Цена</th>
-                        <th>Действие</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stock in stocks %}
-                    <tr>
-                        <td>{{ stock.name }}</td>
-                        <td>{{ stock.ticker }}</td>
-                        <td id="price-{{ stock.ticker }}">{{ stock.current_price | format_currency }}</td>
-                        <td>
-                            <form action="/buy_stock" method="post">
-                                <input type="hidden" name="stock_id" value="{{ stock.id }}">
-                                <input type="number" name="quantity" min="1" step="1" required>
-                                <button type="submit" class="button">Купить</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
+    <section>
+        <h2>Доступные акции</h2>
+        <table class="contribution-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Тикер</th>
+                    <th>Цена</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr>
+                    <!-- Название акции с обработчиком клика -->
+                    <td class="stock-name" data-stock-id="{{ stock.id }}">{{ stock.name }}</td>
+                    <td>{{ stock.ticker }}</td>
+                    <td id="price-{{ stock.ticker }}">{{ stock.current_price | format_currency }}</td>
+                    <td>
+                        <form action="/buy_stock" method="post">
+                            <input type="hidden" name="stock_id" value="{{ stock.id }}">
+                            <input type="number" name="quantity" min="1" step="1" required>
+                            <button type="submit" class="button">Купить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
 
     <section class="investments">
         <h2>Мои инвестиции</h2>

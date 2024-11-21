@@ -9,10 +9,8 @@ from app.models import User, PensionFund, InterestRate
 def client():
     app = create_app()
     app.config['TESTING'] = True
-
-    # Определяем абсолютный путь до файла базы данных
     db_path = os.path.join(os.path.dirname(__file__), '../test.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'  # Используем полный путь
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 
     with app.test_client() as client:
         with app.app_context():
