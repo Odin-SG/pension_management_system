@@ -44,6 +44,7 @@ def test_register_user_fail(client):
     assert response.status_code == 200
     temp = response.data.decode('utf-8')
     assert '<title>Регистрация</title>' in response.data.decode('utf-8')
+    assert 'Логин должен содержать не менее 3 символов.' in response.data.decode('utf-8')
 
 
 def test_register_existing_user(client):
