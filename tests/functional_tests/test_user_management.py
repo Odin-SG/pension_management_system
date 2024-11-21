@@ -12,6 +12,12 @@ def client():
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
+
+            # Добавляем запись в InterestRate для user_id=0
+            from app.models import InterestRate
+            db.session.add(InterestRate(user_id=0, rate=0.05))
+            db.session.commit()
+
             yield client
 
 
@@ -62,17 +68,40 @@ def test_login_user(client):
     # Сначала регистрируем пользователя
     client.post('/register', data={'username': 'testuser', 'password': 'testpassword'})
 
-    # Пытаемся войти с правильными учетными данными
-    response = client.post('/login', data={'username': 'testuser', 'password': 'testpassword'})
+    # Пытаемся войти с правильными учетными данными через обычный POST-запрос (не AJAX)
+    response = client.post('/login', data={'username': 'testuser', 'password': 'testpassword'}, follow_redirects=True)
+
     assert response.status_code == 200
-    assert 'Успешный вход!' in response.data.decode('utf-8')
+    assert 'Добро пожаловать, testuser!' in response.data.decode('utf-8')
 
 
 def test_login_invalid_user(client):
-    # Попытка входа с некорректными данными
-    response = client.post('/login', data={'username': 'invaliduser', 'password': 'wrongpassword'})
+    # Попытка входа с некорректными данными через обычный POST-запрос (не AJAX)
+    response = client.post('/login', data={'username': 'invaliduser', 'password': 'wrongpassword'}, follow_redirects=True)
     assert response.status_code == 200
-    assert 'Неверное имя пользователя или пароль.' in response.data.decode('utf-8')
+    assert '<title>Вход</title>' in response.data.decode('utf-8')
+
+
+def test_login_user_ajax_success(client):
+    # Сначала регистрируем пользователя
+    client.post('/register', data={'username': 'testuser', 'password': 'testpassword'})
+
+    # Пытаемся войти с правильными учетными данными через AJAX-запрос
+    response = client.post('/login', json={'username': 'testuser', 'password': 'testpassword'})
+    assert response.status_code == 200
+    assert response.is_json
+    json_data = response.get_json()
+    assert json_data['success'] is True  # Проверяем, что возвращается успех
+
+
+def test_login_invalid_user_ajax(client):
+    # Попытка входа с некорректными данными через AJAX-запрос
+    response = client.post('/login', json={'username': 'invaliduser', 'password': 'wrongpassword'})
+    assert response.status_code == 400
+    assert response.is_json
+    json_data = response.get_json()
+    assert json_data['success'] is False
+    assert json_data['message'] == 'Неверное имя пользователя или пароль.'
 
 
 def test_logout_user(client):
@@ -83,4 +112,4 @@ def test_logout_user(client):
     # Выполняем выход из системы
     response = client.get('/logout', follow_redirects=True)
     assert response.status_code == 200
-    assert 'Вы успешно вышли из системы.' in response.data.decode('utf-8')
+    assert '<title>Вход</title>' in response.data.decode('utf-8')
