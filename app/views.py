@@ -370,6 +370,13 @@ def reports():
     """
     Эндпоинт для отображения списка отчетов или возврата их в формате JSON.
     """
+    username = session.get('username', 'Гость')
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash('Пожалуйста, войдите в систему, чтобы получить доступ к личному кабинету.', 'danger')
+        return redirect(url_for('login'))
+
     user_role = session.get('role')
     user_id = session.get('user_id')
 
@@ -403,6 +410,12 @@ def generate_report():
     """
     Эндпоинт для генерации отчета по накоплениям пользователя в формате PDF.
     """
+    username = session.get('username', 'Гость')
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash('Пожалуйста, войдите в систему, чтобы получить доступ к личному кабинету.', 'danger')
+        return redirect(url_for('login'))
     user_id = request.args.get('user_id')
     if not user_id:
         return jsonify(success=False, error="ID пользователя не предоставлен"), 400
@@ -421,6 +434,12 @@ def download_report():
     """
     Эндпоинт для загрузки сохраненного отчета по его ID.
     """
+    username = session.get('username', 'Гость')
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash('Пожалуйста, войдите в систему, чтобы получить доступ к личному кабинету.', 'danger')
+        return redirect(url_for('login'))
     report_id = request.args.get('report_id')
     if not report_id:
         flash('ID отчета не предоставлен.', 'danger')
@@ -440,6 +459,12 @@ def investments():
     """
     Страница инвестиций: отображение доступных акций и текущего портфеля пользователя.
     """
+    username = session.get('username', 'Гость')
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash('Пожалуйста, войдите в систему, чтобы получить доступ к личному кабинету.', 'danger')
+        return redirect(url_for('login'))
     user_id = session.get('user_id')
 
     # Доступные акции
@@ -482,6 +507,13 @@ def buy_stock():
     """
     Покупка акций с использованием транзакционной системы.
     """
+    username = session.get('username', 'Гость')
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash('Пожалуйста, войдите в систему, чтобы получить доступ к личному кабинету.', 'danger')
+        return redirect(url_for('login'))
+
     user_id = session.get('user_id')
     stock_id = request.form.get('stock_id')
     quantity = float(request.form.get('quantity'))
@@ -542,6 +574,13 @@ def sell_stock():
     """
     Продажа акций.
     """
+    username = session.get('username', 'Гость')
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash('Пожалуйста, войдите в систему, чтобы получить доступ к личному кабинету.', 'danger')
+        return redirect(url_for('login'))
+
     user_id = session.get('user_id')
     stock_id = request.form.get('stock_id')  # Получаем ID акции из запроса
     quantity_to_sell = float(request.form.get('quantity'))  # Количество акций для продажи
