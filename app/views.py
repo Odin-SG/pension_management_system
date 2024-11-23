@@ -4,7 +4,7 @@ from .models import db, User, PensionFund, InterestRate, Report, Investment, Sto
 from .controllers.pension_calculator import calculate_pension, calculate_projected_return
 from .controllers.user_management import register_user, authenticate_user, admin_required, manager_required, \
     login_required
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Создание приложения Flask
 app = Flask(__name__)
@@ -565,7 +565,16 @@ def stock_prices(stock_id):
     """
     Возвращает исторические данные о ценах акций в формате JSON.
     """
-    prices = StockPriceHistory.query.filter_by(stock_id=stock_id).order_by(StockPriceHistory.timestamp).all()
+    hours = request.args.get('hours', default=2, type=int)
+    time_limit = datetime.utcnow() - timedelta(hours=hours)
+
+    # Фильтруем записи по stock_id и времени
+    prices = StockPriceHistory.query.filter(
+        StockPriceHistory.stock_id == stock_id,
+        StockPriceHistory.timestamp >= time_limit
+    ).order_by(StockPriceHistory.timestamp).all()
+
+    # Формируем данные для ответа
     data = [
         {'timestamp': price.timestamp.strftime('%Y-%m-%d %H:%M:%S'), 'price': price.price}
         for price in prices
