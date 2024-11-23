@@ -546,15 +546,14 @@ def sell_stock():
     stock_id = request.form.get('stock_id')  # Получаем ID акции из запроса
     quantity_to_sell = float(request.form.get('quantity'))  # Количество акций для продажи
 
-    # Получаем информацию об инвестициях
-    investment = Investment.query.filter_by(user_id=user_id, stock_id=stock_id).first()
-    if not investment or investment.quantity < quantity_to_sell:
-        return jsonify({'success': False, 'message': 'Недостаточно акций для продажи.'}), 400
-
-    # Получаем информацию об акции
     stock = Stock.query.get(stock_id)
     if not stock:
         return jsonify({'success': False, 'message': 'Акция не найдена.'}), 404
+
+    # Затем проверяем инвестиции
+    investment = Investment.query.filter_by(user_id=user_id, stock_id=stock_id).first()
+    if not investment or investment.quantity < quantity_to_sell:
+        return jsonify({'success': False, 'message': 'Недостаточно акций для продажи.'}), 400
 
     # Рассчитываем доход от продажи
     total_income = stock.current_price * quantity_to_sell
