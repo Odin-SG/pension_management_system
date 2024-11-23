@@ -194,7 +194,20 @@ def withdraw():
         return redirect(url_for('login'))
 
     # Получаем сумму снятия из формы
-    amount = float(request.form.get('amount'))
+    amount_str = request.form.get('amount')
+
+    if not amount_str or not amount_str.replace('.', '', 1).replace('-', '', 1).isdigit():
+        flash('Пожалуйста, введите корректную сумму для снятия.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    amount = float(amount_str)
+
+    if amount <= 0:
+        flash('Сумма снятия должна быть положительной.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    # Преобразуем строку в число
+    amount = float(amount_str)
     if amount <= 0:
         flash('Сумма снятия должна быть положительной.', 'danger')
         return redirect(url_for('dashboard'))
