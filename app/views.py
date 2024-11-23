@@ -151,13 +151,22 @@ def contribute():
         flash('Пожалуйста, войдите в систему, чтобы сделать вклад.', 'danger')
         return redirect(url_for('login'))
 
-    # Получаем сумму вклада из формы
-    amount = float(request.form.get('amount'))
+    amount_str = request.form.get('amount')
+
+    if not amount_str:
+        flash('Пожалуйста, укажите сумму вклада.', 'danger')
+        return redirect(url_for('dashboard'))
+
+    try:
+        amount = float(amount_str)
+    except ValueError:
+        flash('Пожалуйста, введите корректную сумму вклада.', 'danger')
+        return redirect(url_for('dashboard'))
+
     if amount <= 0:
         flash('Сумма вклада должна быть положительной.', 'danger')
         return redirect(url_for('dashboard'))
 
-    # Создаем новую запись вклада в пенсионный фонд
     new_contribution = PensionFund(user_id=user.id, amount=amount)
     try:
         db.session.add(new_contribution)
