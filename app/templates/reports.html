@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <header>
+        Управление Пенсионными Накоплениями - Отчеты
+    </header>
+    <main>
+        <section class="container">
+            <h1>Отчеты</h1>
+            <button id="generate-report-button" class="button">Сгенерировать Отчет</button>
+            <div id="reports-list-container">
+                <h2>Список Отчетов</h2>
+                <ul id="reports-list">
+                    {% for report in reports %}
+                        <li>
+                            <a href="/download_report?report_id={{ report['report_id'] }}" class="download-report-link">
+                                Отчет для пользователя {{ report['user_id'] }} ({{ report['filename'] }}) - создан: {{ report['created_at'] }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        &copy; 2024 Управление Пенсионными Накоплениями
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // Генерация отчета с обновлением списка
+            $('#generate-report-button').on('click', function() {
+                var userId = '{{ session.get("user_id") }}'; // ID текущего пользователя из сессии
+                if (userId && userId !== 'None') {
+                    $.ajax({
+                        url: '/generate_report',
+                        type: 'GET',
+                        data: { user_id: userId },
+                        success: function(response) {
+                            if (response.success) {
+                                alert(response.message || 'Отчет успешно сгенерирован');
+                                loadReports(); // Обновляем список отчетов
+                            } else {
+                                alert('Ошибка: ' + (response.error || 'Неизвестная ошибка'));
+                            }
+                        },
+                        error: function(xhr) {
+                            alert('Ошибка при генерации отчета: ' + xhr.responseText);
+                        }
+                    });
+                } else {
+                    alert('Ошибка: ID пользователя не найден в сессии.');
+                }
+            });
+
+            // Функция для загрузки списка отчетов
+            function loadReports() {
+                $.ajax({
+                    url: '/reports',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        var reportsList = $('#reports-list');
+                        reportsList.empty();
+
+                        // Проверяем, есть ли данные об отчетах
+                        if (data.reports && data.reports.length > 0) {
+                            data.reports.forEach(function(report) {
+                                var listItem = '<li>' +
+                                    '<a href="/download_report?report_id=' + report.report_id + '">' +
+                                    'Отчет для пользователя ' + report.user_id + ' (' + report.filename + ') - создан: ' + report.created_at +
+                                    '</a>' +
+                                    '</li>';
+                                reportsList.append(listItem);
+                            });
+                        } else {
+                            reportsList.append('<li>Пусто</li>');
+                        }
+                    },
+                    error: function() {
+                        alert('Ошибка при загрузке списка отчетов. Пожалуйста, попробуйте позже.');
+                    }
+                });
+            }
+
+            // Загрузка списка отчетов при загрузке страницы
+            loadReports();
+        });
+    </script>
+</body>
+</html>

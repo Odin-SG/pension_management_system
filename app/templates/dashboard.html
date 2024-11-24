@@ -7,8 +7,18 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
     <header>
         Управление Пенсионными Накоплениями
     </header>
@@ -17,7 +27,8 @@
         <p>Добро пожаловать, {{ username }}!</p>
         <section class="container">
             <h2>Текущие пенсионные накопления</h2>
-            <p>Общая сумма накоплений: <strong>{{ total_amount }}</strong> руб.</p>
+            <a href="/reports" class="button reports-button">Перейти к отчётам</a>
+            <p>Общая сумма накоплений: <strong>{{ total_amount|format_currency }}</strong> руб.</p>
             <h3>Детали вкладов:</h3>
             <table class="contribution-table">
                 <thead>
@@ -29,15 +40,22 @@
                 <tbody>
                     {% for detail in details %}
                         <tr class="{{ loop.cycle('odd', 'even') }}">
-                            <td>{{ detail.amount }}</td>
+                            <td>{{ detail.amount|format_currency }}</td>
                             <td>{{ detail.contribution_date }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
             <h2>Прогнозируемая доходность</h2>
-            <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return }}</strong> руб.</p>
+            <p>Через {{ years }} лет при ставке {{ interest_rate }}%: <strong>{{ projected_return|format_currency }}</strong> руб.</p>
+            <a href="/investments" class="button investments-button">Перейти к инвестициям</a>
         </section>
+        {% if session['role'] == 'admin' %}
+            <a href="/admin_panel" class="button">Перейти в Админ Панель</a>
+        {% endif %}
+       {% if session['role'] == 'manager' %}
+            <a href="/admin_panel" class="button">Перейти в панель менеджера</a>
+        {% endif %}
         <button id="contribute-button" class="button">Пополнить Накопления</button>
         <button id="withdraw-button" class="button">Снять Средства</button>
         <a href="/logout" class="button">Выйти</a>
@@ -72,42 +90,5 @@
     <footer>
         &copy; 2024 Управление Пенсионными Накоплениями
     </footer>
-
-    <script>
-        // Открытие и закрытие модальных окон
-        $(document).ready(function() {
-            var contributeModal = $('#contribute-modal');
-            var withdrawModal = $('#withdraw-modal');
-            var contributeButton = $('#contribute-button');
-            var withdrawButton = $('#withdraw-button');
-            var closeButton = $('.close-button');
-            var withdrawCloseButton = $('.withdraw-close-button');
-
-            contributeButton.on('click', function() {
-                contributeModal.show();
-            });
-
-            withdrawButton.on('click', function() {
-                withdrawModal.show();
-            });
-
-            closeButton.on('click', function() {
-                contributeModal.hide();
-            });
-
-            withdrawCloseButton.on('click', function() {
-                withdrawModal.hide();
-            });
-
-            $(window).on('click', function(event) {
-                if ($(event.target).is(contributeModal)) {
-                    contributeModal.hide();
-                }
-                if ($(event.target).is(withdrawModal)) {
-                    withdrawModal.hide();
-                }
-            });
-        });
-    </script>
 </body>
 </html>

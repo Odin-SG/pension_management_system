@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инвестиции</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <header>
+        <h1>Инвестиции</h1>
+    </header>
+    <div class="container">
+    <section>
+        <h2>Доступные акции</h2>
+        <table class="contribution-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Тикер</th>
+                    <th>Цена</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr>
+                    <!-- Название акции с обработчиком клика -->
+                    <td class="stock-name" data-stock-id="{{ stock.id }}">{{ stock.name }}</td>
+                    <td>{{ stock.ticker }}</td>
+                    <td id="price-{{ stock.ticker }}">{{ stock.current_price | format_currency }}</td>
+                    <td>
+                        <form action="/buy_stock" method="post">
+                            <input type="hidden" name="stock_id" value="{{ stock.id }}">
+                            <input type="number" name="quantity" min="1" step="1" required>
+                            <button type="submit" class="button">Купить</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+
+    <section class="investments">
+        <h2>Мои инвестиции</h2>
+        {% if investments %}
+            <ul>
+                {% for investment in investments %}
+                <li class="investment-item">
+                    {{ investment.quantity }} шт. акций {{ investment.stock_name }} ({{ investment.ticker }})
+                    на сумму {{ investment.total_amount | format_currency }} руб. ({{ investment.average_price | format_currency }} руб. за акцию)
+                    <form action="/sell_stock" method="post" style="display:inline;">
+                        <input type="hidden" name="stock_id" value="{{ investment.stock_id }}"> <!-- Используем ID -->
+                        <input type="number" name="quantity" min="1" step="1" max="{{ investment.quantity }}" required>
+                        <button type="submit" class="button sell-button">Продать</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>У вас нет инвестиций.</p>
+        {% endif %}
+    </section>
+    </div>
+    <canvas id="stockChart" width="400" height="200"></canvas>
+</body>
+
+</html>

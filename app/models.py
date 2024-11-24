@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Инициализация базы данных
 db = SQLAlchemy()
@@ -13,8 +14,15 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    role = db.Column(db.String(10), nullable=False, default='user')  # Поле роли: 'admin' или 'user'
 
     pension_funds = db.relationship('PensionFund', backref='user', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -31,3 +39,69 @@ class PensionFund(db.Model):
 
     def __repr__(self):
         return f'<PensionFund User ID {self.user_id} Amount {self.amount}>'
+
+
+class InterestRate(db.Model):
+    __tablename__ = 'interest_rate'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False, default=0)  # user_id = 0 означает глобальная ставка
+    rate = db.Column(db.Float, nullable=False)
+
+    def __repr__(self):
+        return f'<InterestRate User ID {self.user_id} Rate {self.rate}>'
+
+
+class Report(db.Model):
+    __tablename__ = 'reports'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Report {self.filename}>'
+
+
+class Stock(db.Model):
+    __tablename__ = 'stocks'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    ticker = db.Column(db.String(10), nullable=False, unique=True)
+    current_price = db.Column(db.Float, nullable=False)
+    trend = db.Column(db.Float, default=0.0)  # Например, +0.1 для растущего тренда
+
+    def __repr__(self):
+        return f'<Stock {self.ticker} - {self.current_price}>'
+
+
+class Investment(db.Model):
+    __tablename__ = 'investments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'), nullable=False)
+    quantity = db.Column(db.Float, nullable=False)  # Количество акций
+    invested_amount = db.Column(db.Float, nullable=False)  # Общая сумма инвестиций
+
+    # Реляция к таблице Stock
+    stock = db.relationship('Stock', backref='investments')
+
+    def __repr__(self):
+        return f'<Investment {self.user_id} - {self.stock_id} ({self.quantity} шт.)>'
+
+
+class StockPriceHistory(db.Model):
+    __tablename__ = 'stock_price_history'
+
+    id = db.Column(db.Integer, primary_key=True)
+    stock_id = db.Column(db.Integer, db.ForeignKey('stocks.id'), nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+
+    stock = db.relationship('Stock', backref='price_history')
+
+    def __repr__(self):
+        return f'<StockPriceHistory {self.stock_id} - {self.price} at {self.timestamp}>'

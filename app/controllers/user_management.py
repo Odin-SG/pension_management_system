@@ -1,5 +1,7 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.models import db, User
+from flask import session, redirect, url_for, flash
+from functools import wraps
 
 
 # Функция для регистрации нового пользователя
@@ -34,12 +36,52 @@ def authenticate_user(username, password):
 
     :param username: Имя пользователя
     :param password: Пароль пользователя
-    :return: True, если аутентификация успешна, иначе False
+    :return: Объект пользователя, если аутентификация успешна, иначе None
     """
+    # Находим пользователя по имени
     user = User.query.filter_by(username=username).first()
+
+    # Проверяем пароль
     if user and check_password_hash(user.password_hash, password):
-        return True
-    return False
+        return user  # Возвращаем объект пользователя
+
+    # Если пользователь не найден или пароль неверный
+    return None
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Пожалуйста, войдите в систему для доступа к этой странице.', 'danger')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_role = session.get('role')
+        if user_role != 'admin':
+            flash('Доступ разрешен только администраторам.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+def manager_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_role = session.get('role')
+        if user_role != 'manager':
+            flash('Доступ разрешен только менеджерам.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 # Функция для обновления данных пользователя
